@@ -1,0 +1,91 @@
+/* yc1: Sắp xếp các bộ phim theo ngày phát hành giảm dần rồi lưu ra một file mới */
+
+awk -F, 'NR==1 {print; next} {print $19 "\t" $14 "\t" $0}' tmdb_clean_final.csv \
+| sort -k1,1nr -k2,2r \
+| cut -f3- \
+> yc_1_decline_date.csv
+
+
+======================================================================================
+/*yc2: Lọc ra các bộ phim có đánh giá trung bình trên 7.5 rồi lưu ra một file mới*/
+======================================================================================
+sudo apt install gawk
+gawk -v FPAT='([^,]*|"([^"]|"")*")' '($18) > 7.5  {print $0}' tmdb_clean_final.csv 
+> yc_2_rating_greater_than75.csv
+
+
+
+======================================================================================
+/*yc3: Tìm ra phim nào có doanh thu cao nhất và doanh thu thấp nhất*/
+======================================================================================
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb-movies.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $5); if($5~/^[0-9]+$/) printf "%s\t%s\t%s\n", $5, $6, $19}' | sort -nr -k1 | head -1 | awk '{printf "Phim doanh thu cao nhất: %s (%s) → %s\n", $2, $3, $1}'
+
+
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb-movies.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $5); if($5~/^[0-9]+$/) printf "%s\t%s\t%s\n", $5, $6, $19}' | sort -n -k1 | awk '$1>0 {printf "Phim doanh thu thấp nhất (>0): %s (%s) → %s\n", $2, $3, $1; exit}'
+
+
+======================================================================================
+/*yc4: Tính tổng doanh thu tất cả các bộ phim*/
+======================================================================================
+
+
+gawk -v FPAT='([^,]*|"([^"]|"")*")' '
+NR>1 {
+  gsub(/XXX/, ",", $5)
+  sum += $5+0
+}
+END {
+  printf("Tổng doanh thu: %.0f\n", sum)
+}
+' tmdb_clean_final.csv
+>> yc_4_sum_revenue.csv
+
+
+======================================================================================
+/*yc5: Top 10 bộ phim đem về lợi nhuận cao nhất*/
+======================================================================================
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb-movies.csv | awk -F, 'NR>1 {gsub(/XXX/, ",", $5); if($5~/^[0-9]+$/) printf "%s\t%s\t%s\n", $5, $6, $19}' 
+| sort -nr -k1 | awk '!seen[$2]++' 
+| head -10 
+| awk '{printf "Phim doanh thu cao #%d: %s (%s) → %s\n", NR, $2, $3, $1}' 
+> yc_5_top_10_revenue.csv
+
+
+
+======================================================================================
+/*yc6: Đạo diễn nào có nhiều bộ phim nhất và diễn viên nào đóng nhiều phim nhất*/
+======================================================================================
+
+/*Loc Dao Dien cot so 9*/
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $9); if($9!="") print $9}' \
+| sort \
+| uniq -c \
+| sort -nr \
+| head -1 > yc_6_dir.csv
+
+ ===========================================================================================
+/*Loc Dien Vien cot so 7*/
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $7); split($7, actors, "|"); for(i in actors) if(actors[i]!="") print actors[i]}' \
+| sort \
+| uniq -c \
+| sort -nr \
+| head -1 >> yc_6_dir.csv 
+
+
+
+======================================================================================
+/*yc7: Thống kê số lượng phim theo các thể loại. Ví dụ có bao nhiêu phim thuộc thể loại Action, bao nhiêu thuộc thể loại Family, ….*/======================================================================================
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv | awk -F, 'NR>1 {
+    gsub(/XXX/, ",", $14)
+    split($14, genres, "|")
+    for(i in genres) if(genres[i]!="") print genres[i]
+}' | sort | uniq -c | sort -nr > yc_7_List_genre.csv 
