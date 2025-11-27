@@ -1,0 +1,5 @@
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv | awk -F, 'NR>1 {
+    gsub(/XXX/, ",", $14)
+    split($14, genres, "|")
+    for(i in genres) if(genres[i]!="") print genres[i]
+}' | sort | uniq -c | sort -nr > yc_7_List_genre.csv 

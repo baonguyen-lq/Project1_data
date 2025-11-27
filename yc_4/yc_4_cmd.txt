@@ -1,0 +1,11 @@
+
+gawk -v FPAT='([^,]*|"([^"]|"")*")' '
+NR>1 {
+  gsub(/XXX/, ",", $5)
+  sum += $5+0
+}
+END {
+  printf("Tổng doanh thu: %.0f\n", sum)
+}
+' tmdb_clean_final.csv
+>> yc_4_sum_revenue.csv

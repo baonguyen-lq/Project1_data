@@ -1,0 +1,4 @@
+sudo apt install gawk
+gawk -v FPAT='([^,]*|"([^"]|"")*")' '($18) > 7.5  {print $0}' tmdb_clean_final.csv 
+> yc_2_rating_greater_than75.csv
+

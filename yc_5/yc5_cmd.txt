@@ -1,0 +1,5 @@
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb-movies.csv | awk -F, 'NR>1 {gsub(/XXX/, ",", $5); if($5~/^[0-9]+$/) printf "%s\t%s\t%s\n", $5, $6, $19}' 
+| sort -nr -k1 | awk '!seen[$2]++' 
+| head -10 
+| awk '{printf "Phim doanh thu cao #%d: %s (%s) → %s\n", NR, $2, $3, $1}' 
+> yc_5_top_10_revenue.csv

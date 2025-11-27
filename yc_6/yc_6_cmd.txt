@@ -1,0 +1,18 @@
+/*Loc Dao Dien cot so 9*/
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $9); if($9!="") print $9}' \
+| sort \
+| uniq -c \
+| sort -nr \
+| head -1 > yc_6_dir.csv
+
+ ======================================================================================================
+/*Loc Dien Vien cot so 7*/
+
+awk -F'"' -v OFS='' '{for(i=2;i<=NF;i+=2){gsub(/,/, "XXX", $i)}}; NF=NF; $1=$1' tmdb_clean_final.csv \
+| awk -F, 'NR>1 {gsub(/XXX/, ",", $7); split($7, actors, "|"); for(i in actors) if(actors[i]!="") print actors[i]}' \
+| sort \
+| uniq -c \
+| sort -nr \
+| head -1 >> yc_6_dir.csv 
+
